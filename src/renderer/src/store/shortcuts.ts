@@ -54,6 +54,13 @@ const initialState: ShortcutsState = {
       system: false
     },
     {
+      key: 'rename_topic',
+      shortcut: ['CommandOrControl', 'R'],
+      editable: true,
+      enabled: true,
+      system: false
+    },
+    {
       key: 'toggle_show_assistants',
       shortcut: ['CommandOrControl', '['],
       editable: true,

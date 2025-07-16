@@ -1,11 +1,15 @@
 import { useAssistants } from '@renderer/hooks/useAssistant'
 import { useSettings } from '@renderer/hooks/useSettings'
+import { useShortcut } from '@renderer/hooks/useShortcuts'
 import { useActiveTopic } from '@renderer/hooks/useTopic'
 import { EVENT_NAMES, EventEmitter } from '@renderer/services/EventService'
 import NavigationService from '@renderer/services/NavigationService'
+import { useAppDispatch } from '@renderer/store'
+import { updateTopic } from '@renderer/store/assistants'
 import { Assistant, Topic } from '@renderer/types'
 import { FC, startTransition, useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import Chat from './Chat'
@@ -17,6 +21,8 @@ let _activeAssistant: Assistant
 const HomePage: FC = () => {
   const { assistants } = useAssistants()
   const navigate = useNavigate()
+  const { t } = useTranslation()
+  const dispatch = useAppDispatch()
 
   const location = useLocation()
   const state = location.state
@@ -46,6 +52,29 @@ const HomePage: FC = () => {
     },
     [_setActiveTopic]
   )
+
+  // Add shortcut handler for topic renaming
+  useShortcut('rename_topic', async () => {
+    if (!activeTopic || !activeAssistant) return
+    
+    const PromptPopup = await import('@renderer/components/Popups/PromptPopup')
+    
+    try {
+      const name = await PromptPopup.default.show({
+        title: t('chat.topics.edit.title'),
+        message: '',
+        defaultValue: activeTopic?.name || ''
+      })
+      
+      if (name && activeTopic?.name !== name) {
+        const updatedTopic = { ...activeTopic, name, isNameManuallyEdited: true }
+        dispatch(updateTopic({ assistantId: activeAssistant.id, topic: updatedTopic }))
+        setActiveTopic(updatedTopic)
+      }
+    } catch (error) {
+      console.error('Failed to rename topic:', error)
+    }
+  })
 
   useEffect(() => {
     NavigationService.setNavigate(navigate)
