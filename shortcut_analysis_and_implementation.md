@@ -47,9 +47,20 @@ interface Shortcut {
 
 ## Ctrl+R话题重命名功能实现
 
-### 1. 实现步骤
+### 1. 实现位置的选择
 
-#### 1.1 添加快捷键定义
+#### 1.1 实现位置分析
+最初考虑在HomePage中实现，但经过分析后决定在Chat组件中实现，原因如下：
+
+**在Chat组件中实现的优势：**
+- **功能就近原则**: 话题重命名是聊天相关的核心功能，应该在聊天组件中实现
+- **已有先例**: Chat组件已经在使用`useShortcut`处理`search_message_in_chat`快捷键
+- **完整的数据访问**: 有`activeTopic`、`setActiveTopic`的直接访问，通过`useAssistant`获取assistant信息
+- **职责清晰**: Chat组件负责所有聊天相关的交互，避免功能职责分散
+
+### 2. 实现步骤
+
+#### 2.1 添加快捷键定义
 在 `src/renderer/src/store/shortcuts.ts` 中添加新的快捷键定义：
 
 ```typescript
@@ -62,12 +73,18 @@ interface Shortcut {
 }
 ```
 
-#### 1.2 实现快捷键处理逻辑
-在 `src/renderer/src/pages/home/HomePage.tsx` 中添加快捷键处理：
+#### 2.2 实现快捷键处理逻辑
+在 `src/renderer/src/pages/home/Chat.tsx` 中添加快捷键处理：
 
 ```typescript
+// 添加必要的导入
+import { useAppDispatch } from '@renderer/store'
+import { updateTopic } from '@renderer/store/assistants'
+import { useTranslation } from 'react-i18next'
+
+// 在组件内部添加快捷键处理
 useShortcut('rename_topic', async () => {
-  if (!activeTopic || !activeAssistant) return
+  if (!props.activeTopic || !assistant) return
   
   const PromptPopup = await import('@renderer/components/Popups/PromptPopup')
   
@@ -75,13 +92,13 @@ useShortcut('rename_topic', async () => {
     const name = await PromptPopup.default.show({
       title: t('chat.topics.edit.title'),
       message: '',
-      defaultValue: activeTopic?.name || ''
+      defaultValue: props.activeTopic?.name || ''
     })
     
-    if (name && activeTopic?.name !== name) {
-      const updatedTopic = { ...activeTopic, name, isNameManuallyEdited: true }
-      dispatch(updateTopic({ assistantId: activeAssistant.id, topic: updatedTopic }))
-      setActiveTopic(updatedTopic)
+    if (name && props.activeTopic?.name !== name) {
+      const updatedTopic = { ...props.activeTopic, name, isNameManuallyEdited: true }
+      dispatch(updateTopic({ assistantId: assistant.id, topic: updatedTopic }))
+      props.setActiveTopic(updatedTopic)
     }
   } catch (error) {
     console.error('Failed to rename topic:', error)
@@ -89,70 +106,70 @@ useShortcut('rename_topic', async () => {
 })
 ```
 
-### 2. 功能特点
+### 3. 功能特点
 
-#### 2.1 智能上下文感知
+#### 3.1 智能上下文感知
 - 只有在存在活动话题时才响应快捷键
 - 自动获取当前活动的话题和助手
 
-#### 2.2 用户体验优化
+#### 3.2 用户体验优化
 - 使用现有的`PromptPopup`组件确保UI一致性
 - 预填充当前话题名称
 - 支持回车确认，Shift+回车换行
 
-#### 2.3 状态管理
+#### 3.3 状态管理
 - 使用Redux store更新话题状态
 - 标记话题为手动编辑（`isNameManuallyEdited: true`）
 - 同步更新当前活动话题
 
-### 3. 技术实现细节
+### 4. 技术实现细节
 
-#### 3.1 异步导入
+#### 4.1 异步导入
 ```typescript
 const PromptPopup = await import('@renderer/components/Popups/PromptPopup')
 ```
 使用动态导入避免循环依赖问题。
 
-#### 3.2 Redux状态更新
+#### 4.2 Redux状态更新
 ```typescript
-dispatch(updateTopic({ assistantId: activeAssistant.id, topic: updatedTopic }))
+dispatch(updateTopic({ assistantId: assistant.id, topic: updatedTopic }))
 ```
 通过Redux action更新话题状态，确保状态同步。
 
-#### 3.3 本地状态同步
+#### 4.3 本地状态同步
 ```typescript
-setActiveTopic(updatedTopic)
+props.setActiveTopic(updatedTopic)
 ```
-同步更新本地活动话题状态，确保UI立即响应。
+通过props传递的函数更新父组件状态，确保UI立即响应。
 
-### 4. 现有话题重命名功能对比
+### 5. 现有话题重命名功能对比
 
-#### 4.1 自动重命名
+#### 5.1 自动重命名
 - **触发**: 话题创建后自动触发
 - **实现**: `autoRenameTopic` 函数
 - **特点**: 使用AI生成话题名称
 
-#### 4.2 手动重命名（原有）
+#### 5.2 手动重命名（原有）
 - **触发**: 右键菜单 → 编辑
 - **实现**: 上下文菜单调用`PromptPopup.show()`
 - **特点**: 用户手动编辑
 
-#### 4.3 快捷键重命名（新增）
+#### 5.3 快捷键重命名（新增）
 - **触发**: `Ctrl+R`
 - **实现**: `useShortcut` + `PromptPopup.show()`
 - **特点**: 快速访问，提高效率
 
-### 5. 兼容性和扩展性
+### 6. 兼容性和扩展性
 
-#### 5.1 平台兼容
+#### 6.1 平台兼容
 - 使用`CommandOrControl`修饰符确保跨平台兼容
 - macOS使用`Cmd+R`，Windows/Linux使用`Ctrl+R`
 
-#### 5.2 可配置性
+#### 6.2 可配置性
 - 快捷键可在设置中编辑
 - 可以启用/禁用该功能
 
-#### 5.3 扩展性
+#### 6.3 扩展性
 - 遵循现有快捷键架构
 - 易于添加更多话题相关快捷键
 
@@ -164,12 +181,14 @@ setActiveTopic(updatedTopic)
 2. **用户体验一致**: 复用现有的UI组件和交互模式
 3. **功能完整**: 包含错误处理、状态同步等完整功能
 4. **可维护性强**: 代码结构清晰，易于维护和扩展
+5. **职责明确**: 将功能实现放在合适的组件中，符合单一职责原则
 
 用户现在可以通过按`Ctrl+R`（或macOS上的`Cmd+R`）快速重命名当前活动的话题，大大提高了使用效率。
 
 ## 实现的文件修改
 
 1. **`src/renderer/src/store/shortcuts.ts`**: 添加了新的快捷键定义
-2. **`src/renderer/src/pages/home/HomePage.tsx`**: 添加了快捷键处理逻辑和相关导入
+2. **`src/renderer/src/pages/home/Chat.tsx`**: 添加了快捷键处理逻辑和相关导入
+3. **`src/renderer/src/pages/home/HomePage.tsx`**: 移除了不合适的快捷键实现
 
-两个文件的修改都已通过TypeScript类型检查，确保代码质量。
+所有文件修改都已通过TypeScript类型检查，确保代码质量。最终实现将快捷键放在Chat组件中，更符合功能就近原则和单一职责原则。

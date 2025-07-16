@@ -6,12 +6,15 @@ import { useChatContext } from '@renderer/hooks/useChatContext'
 import { useSettings } from '@renderer/hooks/useSettings'
 import { useShortcut } from '@renderer/hooks/useShortcuts'
 import { useShowTopics } from '@renderer/hooks/useStore'
+import { useAppDispatch } from '@renderer/store'
+import { updateTopic } from '@renderer/store/assistants'
 import { Assistant, Topic } from '@renderer/types'
 import { classNames } from '@renderer/utils'
 import { Flex } from 'antd'
 import { debounce } from 'lodash'
 import React, { FC, useMemo, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import Inputbar from './Inputbar/Inputbar'
@@ -30,6 +33,8 @@ const Chat: FC<Props> = (props) => {
   const { topicPosition, messageStyle, showAssistants } = useSettings()
   const { showTopics } = useShowTopics()
   const { isMultiSelectMode } = useChatContext(props.activeTopic)
+  const { t } = useTranslation()
+  const dispatch = useAppDispatch()
 
   const mainRef = React.useRef<HTMLDivElement>(null)
   const contentSearchRef = React.useRef<ContentSearchRef>(null)
@@ -52,6 +57,29 @@ const Chat: FC<Props> = (props) => {
       contentSearchRef.current?.enable(selectedText)
     } catch (error) {
       console.error('Error enabling content search:', error)
+    }
+  })
+
+  // Add shortcut handler for topic renaming
+  useShortcut('rename_topic', async () => {
+    if (!props.activeTopic || !assistant) return
+    
+    const PromptPopup = await import('@renderer/components/Popups/PromptPopup')
+    
+    try {
+      const name = await PromptPopup.default.show({
+        title: t('chat.topics.edit.title'),
+        message: '',
+        defaultValue: props.activeTopic?.name || ''
+      })
+      
+      if (name && props.activeTopic?.name !== name) {
+        const updatedTopic = { ...props.activeTopic, name, isNameManuallyEdited: true }
+        dispatch(updateTopic({ assistantId: assistant.id, topic: updatedTopic }))
+        props.setActiveTopic(updatedTopic)
+      }
+    } catch (error) {
+      console.error('Failed to rename topic:', error)
     }
   })
 
