@@ -2,6 +2,7 @@ import ContextMenu from '@renderer/components/ContextMenu'
 import SvgSpinners180Ring from '@renderer/components/Icons/SvgSpinners180Ring'
 import Scrollbar from '@renderer/components/Scrollbar'
 import { LOAD_MORE_COUNT } from '@renderer/config/constant'
+import { useMessageEditing } from '@renderer/context/MessageEditingContext'
 import { useAssistant } from '@renderer/hooks/useAssistant'
 import { useChatContext } from '@renderer/hooks/useChatContext'
 import { useMessageOperations, useTopicMessages } from '@renderer/hooks/useMessageOperations'
@@ -66,6 +67,7 @@ const Messages: React.FC<MessagesProps> = ({ assistant, topic, setActiveTopic, o
   const messages = useTopicMessages(topic.id)
   const { displayCount, clearTopicMessages, deleteMessage, createTopicBranch } = useMessageOperations(topic)
   const messagesRef = useRef<Message[]>(messages)
+  const { startEditing } = useMessageEditing()
 
   const { isMultiSelectMode, handleSelectMessage } = useChatContext(topic)
 
@@ -267,6 +269,14 @@ const Messages: React.FC<MessagesProps> = ({ assistant, topic, setActiveTopic, o
     if (lastMessage) {
       navigator.clipboard.writeText(getMainTextContent(lastMessage))
       window.message.success(t('message.copy.success'))
+    }
+  })
+
+  useShortcut('edit_last_user_message', () => {
+    const userMessages = messages.filter(msg => msg.role === 'user')
+    const lastUserMessage = last(userMessages)
+    if (lastUserMessage) {
+      startEditing(lastUserMessage.id)
     }
   })
 

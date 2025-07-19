@@ -109,6 +109,20 @@ const initialState: ShortcutsState = {
       editable: false,
       enabled: true,
       system: true
+    },
+    {
+      key: 'rename_topic',
+      shortcut: ['CommandOrControl', 'R'],
+      editable: true,
+      enabled: true,
+      system: false
+    },
+    {
+      key: 'edit_last_user_message',
+      shortcut: ['CommandOrControl', 'Shift', 'E'],
+      editable: true,
+      enabled: true,
+      system: false
     }
   ]
 }

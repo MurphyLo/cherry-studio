@@ -1,5 +1,6 @@
 import { ContentSearch, ContentSearchRef } from '@renderer/components/ContentSearch'
 import MultiSelectActionPopup from '@renderer/components/Popups/MultiSelectionPopup'
+import PromptPopup from '@renderer/components/Popups/PromptPopup'
 import { QuickPanelProvider } from '@renderer/components/QuickPanel'
 import { useAssistant } from '@renderer/hooks/useAssistant'
 import { useChatContext } from '@renderer/hooks/useChatContext'
@@ -12,6 +13,7 @@ import { Flex } from 'antd'
 import { debounce } from 'lodash'
 import React, { FC, useMemo, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import Inputbar from './Inputbar/Inputbar'
@@ -26,10 +28,11 @@ interface Props {
 }
 
 const Chat: FC<Props> = (props) => {
-  const { assistant } = useAssistant(props.assistant.id)
+  const { assistant, updateTopic } = useAssistant(props.assistant.id)
   const { topicPosition, messageStyle, showAssistants } = useSettings()
   const { showTopics } = useShowTopics()
   const { isMultiSelectMode } = useChatContext(props.activeTopic)
+  const { t } = useTranslation()
 
   const mainRef = React.useRef<HTMLDivElement>(null)
   const contentSearchRef = React.useRef<ContentSearchRef>(null)
@@ -52,6 +55,19 @@ const Chat: FC<Props> = (props) => {
       contentSearchRef.current?.enable(selectedText)
     } catch (error) {
       console.error('Error enabling content search:', error)
+    }
+  })
+
+  useShortcut('rename_topic', async () => {
+    const name = await PromptPopup.show({
+      title: t('chat.topics.edit.title'),
+      message: '',
+      defaultValue: props.activeTopic?.name || ''
+    })
+    if (name && props.activeTopic?.name !== name) {
+      const updatedTopic = { ...props.activeTopic, name, isNameManuallyEdited: true }
+      updateTopic(updatedTopic)
+      props.setActiveTopic(updatedTopic)
     }
   })
 
