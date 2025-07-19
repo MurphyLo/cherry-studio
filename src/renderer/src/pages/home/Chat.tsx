@@ -1,3 +1,4 @@
+import { loggerService } from '@logger'
 import { ContentSearch, ContentSearchRef } from '@renderer/components/ContentSearch'
 import MultiSelectActionPopup from '@renderer/components/Popups/MultiSelectionPopup'
 import PromptPopup from '@renderer/components/Popups/PromptPopup'
@@ -19,6 +20,8 @@ import styled from 'styled-components'
 import Inputbar from './Inputbar/Inputbar'
 import Messages from './Messages/Messages'
 import Tabs from './Tabs'
+
+const logger = loggerService.withContext('Chat')
 
 interface Props {
   assistant: Assistant
@@ -54,7 +57,7 @@ const Chat: FC<Props> = (props) => {
       const selectedText = window.getSelection()?.toString().trim()
       contentSearchRef.current?.enable(selectedText)
     } catch (error) {
-      console.error('Error enabling content search:', error)
+      logger.error('Error enabling content search:', error)
     }
   })
 
