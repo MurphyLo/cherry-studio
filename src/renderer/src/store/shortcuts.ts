@@ -55,7 +55,7 @@ const initialState: ShortcutsState = {
     },
     {
       key: 'rename_topic',
-      shortcut: ['CommandOrControl', 'R'],
+      shortcut: ['CommandOrControl', 'Alt', 'R'],
       editable: true,
       enabled: true,
       system: false
