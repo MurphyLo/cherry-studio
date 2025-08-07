@@ -96,6 +96,16 @@ const Topics: FC<Props> = ({ assistant: _assistant, activeTopic, setActiveTopic,
     dispatch(newMessagesActions.setTopicFulfilled({ topicId: activeTopic.id, fulfilled: false }))
   }, [activeTopic.id, dispatch, topicFulfilledQuery])
 
+  useEffect(() => {
+    const unsubscribe = window.api.ipcRenderer.on('topic:rename', () => {
+      setEditingTopicId(activeTopic.id)
+      topicEdit.startEdit(activeTopic.name)
+    })
+    return () => {
+      unsubscribe()
+    }
+  }, [activeTopic])
+
   const isRenaming = useCallback(
     (topicId: string) => {
       return renamingTopics.includes(topicId)

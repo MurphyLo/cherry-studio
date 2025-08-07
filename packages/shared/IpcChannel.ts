@@ -195,6 +195,9 @@ export enum IpcChannel {
   // DevTools
   System_ToggleDevTools = 'system:toggleDevTools',
 
+  // Topic
+  Topic_Rename = 'topic:rename',
+
   // events
   BackupProgress = 'backup-progress',
   ThemeUpdated = 'theme:updated',

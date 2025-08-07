@@ -48,6 +48,10 @@ function getShortcutHandler(shortcut: Shortcut) {
           selectionService.processSelectTextByShortcut()
         }
       }
+    case 'rename_topic':
+      return () => {
+        windowService.mainWindow?.webContents.send('topic:rename')
+      }
     default:
       return null
   }
