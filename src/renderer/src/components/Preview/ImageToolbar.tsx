@@ -14,7 +14,7 @@ interface ImageToolbarProps {
   className?: string
 }
 
-const ImageToolbar = ({ pan, zoom, dialog, className }: ImageToolbarProps) => {
+const ImageToolbar = ({ pan, zoom, dialog, onExplainImage, className }: ImageToolbarProps) => {
   const { t } = useTranslation()
 
   // 定义平移距离
@@ -38,6 +38,13 @@ const ImageToolbar = ({ pan, zoom, dialog, className }: ImageToolbarProps) => {
           icon={<ChevronUp size={'1rem'} />}
           onClick={() => pan(0, -panDistance)}
         />
+        {onExplainImage && (
+          <ImageToolButton
+            tooltip={t('preview.explain_image')}
+            icon={<Sparkles size={'1rem'} />}
+            onClick={onExplainImage}
+          />
+        )}
         <ImageToolButton tooltip={t('preview.dialog')} icon={<Scan size={'1rem'} />} onClick={dialog} />
       </ActionButtonRow>
 

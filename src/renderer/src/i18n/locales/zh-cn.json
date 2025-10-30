@@ -2282,6 +2282,7 @@
       "image": "复制为图片"
     },
     "dialog": "打开预览窗口",
+    "explain_image": "解释图片",
     "label": "预览",
     "pan": "移动",
     "pan_down": "下移",

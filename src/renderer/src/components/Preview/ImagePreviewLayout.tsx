@@ -15,6 +15,7 @@ interface ImagePreviewLayoutProps {
   loading?: boolean
   error?: string | null
   enableToolbar?: boolean
+  onExplainImage?: () => void
   className?: string
 }
 
@@ -26,6 +27,7 @@ const ImagePreviewLayout = ({
   loading,
   error,
   enableToolbar,
+  onExplainImage,
   className
 }: ImagePreviewLayoutProps) => {
   // 使用通用图像工具
@@ -51,7 +53,7 @@ const ImagePreviewLayout = ({
       <PreviewContainer vertical className={`image-preview-layout ${className ?? ''}`}>
         {error && <PreviewError>{error}</PreviewError>}
         {children}
-        {!error && enableToolbar && <ImageToolbar pan={pan} zoom={zoom} dialog={dialog} />}
+        {!error && enableToolbar && <ImageToolbar pan={pan} zoom={zoom} dialog={dialog} onExplainImage={onExplainImage} />}
       </PreviewContainer>
     </Spin>
   )
